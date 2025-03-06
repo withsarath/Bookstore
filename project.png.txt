@@ -1,0 +1,1083 @@
+//Front end part
+//App.jsx
+import './index.css'
+import {Routes, Route} from "react-router-dom";
+import Home from "./pages/Home";
+import CreateBooks from "./pages/CreateBooks";
+import ShowBook from "./pages/ShowBook";
+import EditBook from "./pages/EditBook";
+import DeleteBook from "./pages/DeleteBook";
+
+const App = () => {
+  return (
+    <Routes>
+       <Route path="/" element={<Home />} />
+       <Route path="/books/create" element={<CreateBooks />} />
+       <Route path="/books/details/:id" element={<ShowBook/>} />
+       <Route path="/books/edit/:id" element={<EditBook/>} />
+       <Route path="/books/delete/:id" element={<DeleteBook/>} />
+    </Routes>
+  )
+}
+
+export default App
+
+//Main.jsx
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.jsx";
+import { BrowserRouter } from "react-router-dom";
+import { SnackbarProvider } from "notistack";
+
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <SnackbarProvider>
+      <App />
+    </SnackbarProvider>
+  </BrowserRouter>
+);
+
+//Pages Folder
+//CreateBooks.jsx
+import { useState } from 'react';
+import BackButton from '../components/BackButton';
+import Spinner from '../components/Spinner';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+
+const CreateBooks = () => {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [publishYear, setPublishYear] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const handleSaveBook = () => {
+    const data = {
+      title,
+      author,
+      publishYear,
+    };
+    setLoading(true);
+    axios
+      .post('http://localhost:5555/books', data)
+      .then(() => {
+        setLoading(false);
+        enqueueSnackbar('Book Created successfully', { variant: 'success' });
+        navigate('/');
+      })
+      .catch((error) => {
+        setLoading(false);
+        // alert('An error happened. Please Chack console');
+        enqueueSnackbar('Error', { variant: 'error' });
+        console.log(error);
+      });
+  };
+
+  return (
+    <div className='p-4'>
+      <BackButton />
+      <h1 className='text-3xl my-4'>Create Book ✏️</h1>
+      {loading ? <Spinner /> : ''}
+      <div className='flex flex-col border-2 border-sky-400 rounded-xl w-[600px] p-4 mx-auto'>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Title</label>
+          <input
+            type='text'
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2 w-full'
+          />
+        </div>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Author</label>
+          <input
+            type='text'
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2  w-full '
+          />
+        </div>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Publish Year</label>
+          <input
+            type='number'
+            value={publishYear}
+            onChange={(e) => setPublishYear(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2  w-full '
+          />
+        </div>
+        <button className='p-2 bg-sky-300 m-8' onClick={handleSaveBook}>
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default CreateBooks
+//Login page
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post("http://localhost:5555/auth/login", {
+        email,
+        password,
+      });
+      localStorage.setItem("token", response.data.token);
+      enqueueSnackbar("Login successful", { variant: "success" });
+      navigate("/");
+    } catch (error) {
+      enqueueSnackbar("Invalid credentials", { variant: "error" });
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-3xl my-4">Login</h1>
+      <div className="flex flex-col border-2 border-sky-400 rounded-xl w-[600px] p-4 mx-auto">
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <button className="p-2 bg-sky-300 m-8" onClick={handleLogin}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
+
+//Register page
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+
+const Register = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      console.log("Sending registration data:", { name, email, password });
+       await axios.post("http://localhost:5555/auth/register", {
+        name,
+        email,
+        password,
+      });
+      enqueueSnackbar("Registration successful", { variant: "success" });
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration error:", error.response?.data);
+      enqueueSnackbar(error.response?.data?.message || "Error during registration", {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-3xl my-4">Register</h1>
+      <div className="flex flex-col border-2 border-sky-400 rounded-xl w-[600px] p-4 mx-auto">
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <button className="p-2 bg-sky-300 m-8" onClick={handleRegister}>
+          {loading ? "Registering..." : "Register"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
+
+
+//EditBook.jsx
+import  { useState, useEffect } from 'react';
+import BackButton from '../components/BackButton';
+import Spinner from '../components/Spinner';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+
+const EditBook = () => {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [publishYear, setPublishYear] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const {id} = useParams();
+  const { enqueueSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    setLoading(true);
+    axios.get(`http://localhost:5555/books/${id}`)
+    .then((response) => {
+        setAuthor(response.data.author);
+        setPublishYear(response.data.publishYear)
+        setTitle(response.data.title)
+        setLoading(false);
+      }).catch((error) => {
+        setLoading(false);
+        alert('An error happened. Please Chack console');
+        console.log(error);
+      });
+  }, [id])
+  
+  const handleEditBook = () => {
+    const data = {
+      title,
+      author,
+      publishYear,
+    };
+    setLoading(true);
+    axios
+      .put(`http://localhost:5555/books/${id}`, data)
+      .then(() => {
+        setLoading(false);
+        enqueueSnackbar('Book Edited successfully', { variant: 'success' });
+        navigate('/');
+      })
+      .catch((error) => {
+        setLoading(false);
+        // alert('An error happened. Please Chack console');
+        enqueueSnackbar('Error', { variant: 'error' });
+        console.log(error);
+      });
+  };
+
+  return (
+    <div className='p-4'>
+      <BackButton />
+      <h1 className='text-3xl my-4'>Edit Book</h1>
+      {loading ? <Spinner /> : ''}
+      <div className='flex flex-col border-2 border-sky-400 rounded-xl w-[600px] p-4 mx-auto'>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Title</label>
+          <input
+            type='text'
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2 w-full'
+          />
+        </div>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Author</label>
+          <input
+            type='text'
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2  w-full '
+          />
+        </div>
+        <div className='my-4'>
+          <label className='text-xl mr-4 text-gray-500'>Publish Year</label>
+          <input
+            type='number'
+            value={publishYear}
+            onChange={(e) => setPublishYear(e.target.value)}
+            className='border-2 border-gray-500 px-4 py-2  w-full '
+          />
+        </div>
+        <button className='p-2 bg-sky-300 m-8' onClick={handleEditBook}>
+          Save
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default EditBook
+
+//DeleteBook.jsx
+import  { useState } from 'react';
+import BackButton from '../components/BackButton';
+import Spinner from '../components/Spinner';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+
+const DeleteBook = () => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const handleDeleteBook = () => {
+    setLoading(true);
+    axios
+      .delete(`http://localhost:5555/books/${id}`)
+      .then(() => {
+        setLoading(false);
+        enqueueSnackbar('Book Deleted successfully', { variant: 'success' });
+        navigate('/');
+      })
+      .catch((error) => {
+        setLoading(false);
+        // alert('An error happened. Please Chack console');
+        enqueueSnackbar('Error', { variant: 'error' });
+        console.log(error);
+      });
+  };
+  
+  return (
+    <div className='p-4'>
+      <BackButton />
+      <h1 className='text-3xl my-4'>Delete Book</h1>
+      {loading ? <Spinner /> : ''}
+      <div className='flex flex-col items-center border-2 border-sky-400 rounded-xl w-[600px] p-8 mx-auto'>
+        <h3 className='text-2xl'>Are You Sure You want to delete this book?</h3>
+
+        <button
+          className='p-4 bg-red-600 text-white m-8 w-full'
+          onClick={handleDeleteBook}
+        >
+          Yes, Delete it
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default DeleteBook;
+
+//ShowBook.jsx
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import BackButton from "../components/BackButton";
+import Spinner from "../components/Spinner";
+
+const ShowBook = () => {
+  const [book, setBook] = useState(null); // Start with null to handle loading gracefully
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // To handle API errors
+  const { id } = useParams();
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get(`http://localhost:5555/books/${id}`)
+      .then((res) => {
+        setBook(res.data); // Save the book data
+        setLoading(false); // Stop loading
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load book details. Please try again."); // Set error message
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <BackButton />
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (!book) {
+    return (
+      <div className="p-4">
+        <BackButton />
+        <p className="text-gray-500">No book details available.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <BackButton />
+      <h1 className="text-2xl font-bold mb-4">Book Details</h1>
+      <div className="flex flex-col border-2 border-sky-400 rounded-xl w-fit p-4">
+        <div className="my-4">
+          <span className="text-xl mr-4 text-gray-500">Id</span>
+          <span>{book._id}</span>
+        </div>
+        <div className="my-4">
+          <span className="text-xl mr-4 text-gray-500">Title</span>
+          <span>{book.title}</span>
+        </div>
+        <div className="my-4">
+          <span className="text-xl mr-4 text-gray-500">Author</span>
+          <span>{book.author}</span>
+        </div>
+        <div className="my-4">
+          <span className="text-xl mr-4 text-gray-500">Publish Year</span>
+          <span>{book.publishYear}</span>
+        </div>
+        {book.createdAt && (
+          <div className="my-4">
+            <span className="text-xl mr-4 text-gray-500">Created Time</span>
+            <span>{new Date(book.createdAt).toLocaleString()}</span>
+          </div>
+        )}
+        {book.updatedAt && (
+          <div className="my-4">
+            <span className="text-xl mr-4 text-gray-500">Last Updated Time</span>
+            <span>{new Date(book.updatedAt).toLocaleString()}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ShowBook;
+
+//Home.jsx
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Spinner from "../components/Spinner";
+import { Link } from "react-router-dom";
+// import { AiOutlineEdit } from 'react-icons/ai';
+// import { BsInfoCircle } from 'react-icons/bs';
+import { MdOutlineAddBox } from "react-icons/md";
+import BooksTable from "../components/home/BooksTable";
+import BooksCard from "../components/home/BooksCard";
+
+const Home = () => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showType, setShowType] = useState("table");
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get("http://localhost:5555/books")
+      .then((response) => {
+        setBooks(response.data.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-center items-center gap-x-4">
+        <button
+          className="bg-sky-300 hover:bg-sky-600 px-4 py-1 rounded-lg"
+          onClick={() => setShowType("table")}
+        >
+          Table
+        </button>
+        <button
+          className="bg-sky-300 hover:bg-sky-600 px-4 py-1 rounded-lg"
+          onClick={() => setShowType("card")}
+        >
+          Card
+        </button>
+      </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl my-8">Books List 📚</h1>
+        <Link to="/books/create">
+          <p>Add Book 📝</p>
+          <MdOutlineAddBox className="text-sky-800 text-4xl" />
+        </Link>
+      </div>
+      {loading ? (
+        <Spinner />
+      ) : showType === "table" ? (
+        <BooksTable books={books} />
+      ) : (
+        <BooksCard books={books} />
+      )}
+    </div>
+  );
+};
+
+export default Home;
+
+//Components Folder
+//BackButton.jsx
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { BsArrowLeft } from 'react-icons/bs';
+
+const BackButton = ({ destination = '/' }) => {
+  return (
+    <div className="flex">
+      <Link
+        to={destination}
+        className="bg-sky-800 text-white px-4 py-2 rounded-lg flex items-center justify-center w-fit"
+      >
+        <BsArrowLeft className="text-2xl mr-2" />
+        <span>Back</span>
+      </Link>
+    </div>
+  );
+};
+
+// Prop Validation
+BackButton.propTypes = {
+  destination: PropTypes.string, // destination must be a string
+};
+
+export default BackButton;
+//Home Folder
+//BookModal.jsx
+import PropTypes from 'prop-types';
+import { AiOutlineClose } from 'react-icons/ai';
+import { PiBookOpenTextLight } from 'react-icons/pi';
+import { BiUserCircle } from 'react-icons/bi';
+
+const BookModal = ({ book, onClose }) => {
+  return (
+    <div
+      className="fixed bg-black bg-opacity-60 top-0 left-0 right-0 bottom-0 z-50 flex justify-center items-center"
+      onClick={onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="w-[600px] max-w-full h-[400px] bg-white rounded-xl p-4 flex flex-col relative"
+      >
+        <AiOutlineClose
+          className="absolute right-6 top-6 text-3xl text-red-600 cursor-pointer"
+          onClick={onClose}
+        />
+        <h2 className="w-fit px-4 py-1 bg-red-300 rounded-lg">
+          {book.publishYear}
+        </h2>
+        <h4 className="my-2 text-gray-500">{book._id}</h4>
+        <div className="flex justify-start items-center gap-x-2">
+          <PiBookOpenTextLight className="text-red-300 text-2xl" />
+          <h2 className="my-1">{book.title}</h2>
+        </div>
+        <div className="flex justify-start items-center gap-x-2">
+          <BiUserCircle className="text-red-300 text-2xl" />
+          <h2 className="my-1">{book.author}</h2>
+        </div>
+        <p className="mt-4">Anything You want to show</p>
+        <p className="my-2">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni quia
+          voluptatum sint. Nisi impedit libero eveniet cum vitae qui expedita
+          necessitatibus assumenda laboriosam, facilis iste cumque a pariatur
+          nesciunt cupiditate voluptas? Quis atque earum voluptate dolor nisi
+          dolorum est? Deserunt placeat cumque quo dicta architecto, dolore
+          vitae voluptate sequi repellat!
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Prop validation using PropTypes
+BookModal.propTypes = {
+  book: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    author: PropTypes.string.isRequired,
+    publishYear: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+export default BookModal;
+
+//BookCard.jsx
+import PropTypes from 'prop-types';
+import BookSingleCard from './BookSingleCard';
+
+const BooksCard = ({ books }) => {
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {books.map((item) => (
+        <BookSingleCard key={item._id} book={item} />
+      ))}
+    </div>
+  );
+};
+
+BooksCard.propTypes = {
+  books: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      author: PropTypes.string.isRequired,
+      publishYear: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
+    })
+  ).isRequired,
+};
+
+export default BooksCard;
+
+//BookSingleCard.jsx
+import { Link } from 'react-router-dom';
+import { PiBookOpenTextLight } from 'react-icons/pi';
+import { BiUserCircle, BiShow } from 'react-icons/bi';
+import { AiOutlineEdit } from 'react-icons/ai';
+import { BsInfoCircle } from 'react-icons/bs';
+import { MdOutlineDelete } from 'react-icons/md';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
+import BookModal from './BookModal';
+
+const BookSingleCard = ({ book }) => {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <div className="border-2 border-gray-500 rounded-lg px-4 py-2 m-4 relative hover:shadow-xl">
+      <h2 className="absolute top-1 right-2 px-4 py-1 bg-red-300 rounded-lg">
+        {book.publishYear}
+      </h2>
+      <h4 className="my-2 text-gray-500">{book._id}</h4>
+      <div className="flex justify-start items-center gap-x-2">
+        <PiBookOpenTextLight className="text-red-300 text-2xl" />
+        <h2 className="my-1">{book.title}</h2>
+      </div>
+      <div className="flex justify-start items-center gap-x-2">
+        <BiUserCircle className="text-red-300 text-2xl" />
+        <h2 className="my-1">{book.author}</h2>
+      </div>
+      <div className="flex justify-between items-center gap-x-2 mt-4 p-4">
+        <BiShow
+          className="text-3xl text-blue-800 hover:text-black cursor-pointer"
+          onClick={() => setShowModal(true)}
+        />
+        <Link to={`/books/details/${book._id}`}>
+          <BsInfoCircle className="text-2xl text-green-800 hover:text-black" />
+        </Link>
+        <Link to={`/books/edit/${book._id}`}>
+          <AiOutlineEdit className="text-2xl text-yellow-600 hover:text-black" />
+        </Link>
+        <Link to={`/books/delete/${book._id}`}>
+          <MdOutlineDelete className="text-2xl text-red-600 hover:text-black" />
+        </Link>
+      </div>
+      {showModal && (
+        <BookModal book={book} onClose={() => setShowModal(false)} />
+      )}
+    </div>
+  );
+};
+
+BookSingleCard.propTypes = {
+  book: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    author: PropTypes.string.isRequired,
+    publishYear: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
+  }).isRequired,
+};
+
+export default BookSingleCard;
+
+//BooksTable.jsx
+import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
+import { AiOutlineEdit } from "react-icons/ai";
+import { BsInfoCircle } from "react-icons/bs";
+import { MdOutlineDelete } from "react-icons/md";
+
+const BooksTable = ({ books }) => {
+  return (
+    <table className="w-full border-separate border-spacing-2">
+      <thead>
+        <tr>
+          <th className="border border-slate-600 rounded-md">No</th>
+          <th className="border border-slate-600 rounded-md">Title</th>
+          <th className="border border-slate-600 rounded-md max-md:hidden">
+            Author
+          </th>
+          <th className="border border-slate-600 rounded-md max-md:hidden">
+            Publish Year
+          </th>
+          <th className="border border-slate-600 rounded-md">Operations</th>
+        </tr>
+      </thead>
+      <tbody>
+        {books.map((book, index) => (
+          <tr key={book._id} className="h-8">
+            <td className="border border-slate-700 rounded-md text-center">
+              {index + 1}
+            </td>
+            <td className="border border-slate-700 rounded-md text-center">
+              {book.title}
+            </td>
+            <td className="border border-slate-700 rounded-md text-center max-md:hidden">
+              {book.author}
+            </td>
+            <td className="border border-slate-700 rounded-md text-center max-md:hidden">
+              {book.publishYear}
+            </td>
+            <td className="border border-slate-700 rounded-md text-center">
+              <div className="flex justify-center gap-x-4">
+                <Link to={`/books/details/${book._id}`}>
+                  <BsInfoCircle className="text-2xl text-green-800" />
+                </Link>
+                <Link to={`/books/edit/${book._id}`}>
+                  <AiOutlineEdit className="text-2xl text-yellow-600" />
+                </Link>
+                <Link to={`/books/delete/${book._id}`}>
+                  <MdOutlineDelete className="text-2xl text-red-600" />
+                </Link>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
+BooksTable.propTypes = {
+  books: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      author: PropTypes.string.isRequired,
+      publishYear: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    })
+  ).isRequired,
+};
+
+export default BooksTable;
+
+//Backend
+//Modals Folder
+//bookModal.js
+import mongoose from "mongoose";
+
+const bookSchema = mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+        },
+        author: {
+            type: String,
+            required: true,
+        },
+        publishYear: {
+            type: Number,
+            required: true,
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
+export const Book = mongoose.model('Book', bookSchema);
+
+//authRoutes.js
+import express from "express";
+import { User } from "../models/userModel.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const router = express.Router();
+
+// Register a new user
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user with hashed password
+    const user = await User.create({ name, email, password: hashedPassword });
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    res.status(201).json({ _id: user._id, name: user.name, email: user.email, token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Login user
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Check password
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    res.json({ _id: user._id, name: user.name, email: user.email, token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+export default router;
+
+
+
+//userModel.js
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
+const userSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Compare passwords
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+export const User = mongoose.model("User", userSchema);
+
+//routes folder
+//bookRoutes.js
+import express from 'express';
+import { Book } from '../models/bookModel.js';
+
+const router = express.Router();
+
+// Route for saving a new book
+router.post('/', async (req, res) => {
+    try {
+        const { title, author, publishYear } = req.body;
+        if (!title || !author || !publishYear) {
+            return res.status(400).send({ message: 'All fields are required: title, author, publishYear' });
+        }
+        const book = await Book.create({ title, author, publishYear });
+        return res.status(201).json(book);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
+// Route for fetching all books
+router.get('/', async (req, res) => {
+    try {
+        const books = await Book.find({});
+        return res.status(200).json({ count: books.length, data: books });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
+// Route for fetching a single book by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const book = await Book.findById(id);
+        if (!book) {
+            return res.status(404).send({ message: 'Book not found' });
+        }
+        return res.status(200).json(book);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
+// Route for updating a book by ID
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, author, publishYear } = req.body;
+        if (!title || !author || !publishYear) {
+            return res.status(400).send({ message: 'All fields are required: title, author, publishYear' });
+        }
+        const book = await Book.findByIdAndUpdate(id, { title, author, publishYear }, { new: true });
+        if (!book) {
+            return res.status(404).send({ message: 'Book not found' });
+        }
+        return res.status(200).json(book);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
+// Route for deleting a book by ID
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const book = await Book.findByIdAndDelete(id);
+        if (!book) {
+            return res.status(404).send({ message: 'Book not found' });
+        }
+        return res.status(200).json(book);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+});
+
+export default router;
+
+//index.js
+import express from "express"
+import { PORT, mongoDBURL } from "./config.js"
+import mongoose from "mongoose";
+import bookRoutes from "./routes/bookRoutes.js"
+import authRoutes from "./routes/authRoutes.js";
+import cors from "cors"
+import dotenv from "dotenv";
+dotenv.config();
+
+
+const app = express()
+
+//middleware for parsing request body
+app.use(express.json());
+
+//Middleware for handling cors policy
+//Option 1 Allow all orgins with defualt of cors(*)
+app.use(cors())
+app.get('/', (req, res) => {
+    res.send('Server is running!');
+});
+
+app.use('/books', bookRoutes)
+app.use("/auth", authRoutes);
+
+mongoose.connect(mongoDBURL)
+    .then(() => {
+        console.log('App connected to database')
+        app.listen(PORT, () => {
+            console.log("App is running at 5555");
+        })
+    })
+    .catch((error) => {
+        console.error(error);
+});
+//config.js
+export const PORT = 5555
+export const mongoDBURL = 'mongodb+srv://sarath:root55@books-store.tav9h.mongodb.net/books-collection?retryWrites=true&w=majority&appName=books-store'
+
+
+.env 
+JWT_SECRET = 7c298dddd909c162da6dbd7af22b236b3a2ffd022f6612c161a0241ad4cfa3c0
